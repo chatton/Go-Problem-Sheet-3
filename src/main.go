@@ -13,6 +13,12 @@ func ElizaResponse (input string) string {
 	pattern := regexp.MustCompile(`\b(?i)father`) // (?i) makes pattern lower case, \b to indicate word end.
 	if pattern.MatchString(input) {
 		return "Why don’t you tell me more about your father?"
+	} else { // doesn't contain father
+		iAmRe := regexp.MustCompile("^I am (.*)")
+		if iAmRe.MatchString(input) {
+			captured := iAmRe.FindStringSubmatch(input)[1]
+			return fmt.Sprintf("How do you know you are %s?", captured)
+		}
 	}
 
 	possibleResponses := []string{
@@ -31,13 +37,12 @@ func printQuestionAndResponse(input string) {
 
 func main(){
 	rand.Seed(time.Now().UnixNano()) // ensure we don't get the same values each time
-
+	
 	inputs := []string{
-		"People say I look like both my mother and father.",
-		"Father was a teacher.",
-		"I was my father’s favourite.",
-		"I’m looking forward to the weekend.",
-		"My grandfather was French!"}
+		"I am happy",
+		"I am not happy with your responses.",
+		"I am not sure that you understand the effect that your questions are having on me.",
+		"I am supposed to just take what you’re saying at face value?"}
 
 	for _, input := range inputs {
 		printQuestionAndResponse(input)
