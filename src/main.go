@@ -5,22 +5,28 @@ import (
 	"fmt"
 	"time"
 	"os"
+	"regexp"
 )
 
 func ElizaResponse (input string) string {
+
+	pattern := regexp.MustCompile(`\b(?i)father`) // (?i) makes pattern lower case, \b to indicate word end.
+	if pattern.MatchString(input) {
+		return "Why don’t you tell me more about your father?"
+	}
 
 	possibleResponses := []string{
 		"I’m not sure what you’re trying to say. Could you explain it to me?", 
 		"How does that make you feel?", 
 		"Why do you say that?"}
-
+	
 	numResponses := len(possibleResponses) // total number of responses
 	index := rand.Intn(numResponses) // index between 0 -> len - 1
 	return possibleResponses[index] // choose the random element.
 }
 
 func printQuestionAndResponse(input string) {
-	fmt.Fprintf(os.Stdout, "Input: %s, Response: %s\n", input, ElizaResponse(input))
+	fmt.Fprintf(os.Stdout, "Input: %s - Response: %s\n", input, ElizaResponse(input))
 }
 
 func main(){
