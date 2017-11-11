@@ -14,9 +14,9 @@ func ElizaResponse (input string) string {
 	if pattern.MatchString(input) {
 		return "Why don’t you tell me more about your father?"
 	} else { // doesn't contain father
-		iAmRe := regexp.MustCompile("^I am (.*)")
-		if iAmRe.MatchString(input) {
-			captured := iAmRe.FindStringSubmatch(input)[1]
+		iAmRe := regexp.MustCompile("(?i)^(i am|im|i'm) (.*)")
+		if iAmRe.MatchString(input) { // capture groups are ["fullMatch", "I'm", "topic"]
+			captured := iAmRe.FindStringSubmatch(input)[2] // 2 is what was after the *I'm* variant.
 			return fmt.Sprintf("How do you know you are %s?", captured)
 		}
 	}
@@ -39,9 +39,9 @@ func main(){
 	rand.Seed(time.Now().UnixNano()) // ensure we don't get the same values each time
 	
 	inputs := []string{
-		"I am happy",
-		"I am not happy with your responses.",
-		"I am not sure that you understand the effect that your questions are having on me.",
+		"Im happy",
+		"I'm not happy with your responses.",
+		"im not sure that you understand the effect that your questions are having on me.",
 		"I am supposed to just take what you’re saying at face value?"}
 
 	for _, input := range inputs {
