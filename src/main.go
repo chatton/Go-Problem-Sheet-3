@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+type Response struct {
+	re      *regexp.Regexp
+	answers []string
+}
+
+func (resp *Response) randomAnswer() string {
+	numResponses := len(resp.answers) // total number of responses
+	index := rand.Intn(numResponses)  // index between 0 -> len - 1
+	return resp.answers[index]        // choose the random element.
+}
+
 func applyReflections(original string) string {
 	// reflection map adapted from https://www.smallsurething.com/implementing-the-famous-eliza-chatbot-in-python/
 
@@ -42,30 +53,46 @@ func applyReflections(original string) string {
 }
 
 func ElizaResponse(input string) string {
-	pattern := regexp.MustCompile(`\b(?i)father`) // (?i) makes pattern lower case, \b to indicate word end.
-	if pattern.MatchString(input) {
-		return "Why don’t you tell me more about your father?"
-	}
-	// doesn't contain father
-	iAmRe := regexp.MustCompile(`(?i)^(i am|im|i'm) (.*)[\.?!]`) // requires that the input end with some form of sentence terminator.
-	if iAmRe.MatchString(input) {                                // capture groups are ["fullMatch", "I'm", "topic"]
-		captured := iAmRe.FindStringSubmatch(input)[2] // 2 is what was after the *I'm* variant.
-		captured = applyReflections(captured)
-		return fmt.Sprintf("How do you know you are %s?", captured)
+	allResponses := []*Response{}
+	patterns := []string{"I like (.*)", "My name is (.*)", "I feel (.*)", `(?i)^(i am|im|i'm) (.*)[\.?!]`, `\b(?i)father`, "(.*)"}
+	answers := [][]string{[]string{"Why do you like %s?", "Are you sure you like %s?"},
+		[]string{"Hello %s, how are you?", "It's nice to meet you %s."},
+		[]string{"Why do you feel %s?", "Are you sure you feel %s?"},
+		[]string{"How do you know you are %s?"},
+		[]string{"Tell me more about your father."},
+		[]string{"I’m not sure what you’re trying to say. Could you explain it to me?",
+			"How does that make you feel?",
+			"Why do you say that?"}}
+
+	for i := 0; i < len(patterns); i++ {
+		resp := makeResponse(patterns[i], answers[i])
+		allResponses = append(allResponses, resp)
 	}
 
-	possibleResponses := []string{
-		"I’m not sure what you’re trying to say. Could you explain it to me?",
-		"How does that make you feel?",
-		"Why do you say that?"}
-
-	numResponses := len(possibleResponses) // total number of responses
-	index := rand.Intn(numResponses)       // index between 0 -> len - 1
-	return possibleResponses[index]        // choose the random element.
+	for _, response := range allResponses {
+		if response.re.MatchString(input) {
+			ans := response.randomAnswer()   // choose any valid answer for this pattern
+			if strings.Contains(ans, "%s") { // if we want to sub in something from the user input
+				match := response.re.FindStringSubmatch(input) // get the match
+				capture := match[len(match)-1]                 // the last element is the specific capture group we want
+				capture = applyReflections(capture)            // process the words and swap them if required.
+				ans = fmt.Sprintf(ans, capture)                // sub into answer
+			}
+			return ans // the answer to the question
+		}
+	}
+	panic("Uh oh, the programmer made a mistake, the catch all should have caught any response!")
 }
 
 func printQuestionAndResponse(input string) {
 	fmt.Fprintf(os.Stdout, "Input: %s - Response: %s\n", input, ElizaResponse(input))
+}
+
+func makeResponse(pattern string, answers []string) *Response {
+	resp := new(Response)
+	resp.re = regexp.MustCompile(pattern)
+	resp.answers = answers
+	return resp
 }
 
 func main() {
@@ -75,7 +102,9 @@ func main() {
 		"Im happy.",
 		"I'm not happy with your responses.",
 		"im not sure that you understand the effect that your questions are having on me.",
-		"I am supposed to just take what you’re saying at face value?"}
+		"I am supposed to just take what you’re saying at face value?",
+		"I like waffles.",
+		"My name is Bob."}
 
 	for _, input := range inputs {
 		printQuestionAndResponse(input)
